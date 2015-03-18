@@ -3,7 +3,7 @@ package Mojo::Console;
 use Mojo::Base 'Mojolicious::Plugin';
 
 sub register {
-  my ($self)=@_;
+  my ($self, $app, $config) = @_;
 }
 
 1;
