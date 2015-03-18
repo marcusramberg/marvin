@@ -4,7 +4,6 @@ use Mojo::Base 'Mojolicious';
 use Mojo::Loader 'load_class';
 use Carp();
 
-my @rooms = ();
 
 has 'adapter';
 

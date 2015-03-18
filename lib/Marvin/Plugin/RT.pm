@@ -9,7 +9,7 @@ sub register {
     20 => sub {
       $self->app->->post(
         "https://rt.uio.no/REST/1.0/search/ticket?orderby=-created&format=s&query=Owner=%27Nobody%27 AND (Status=%27new%27 or Status=%27open%27) AND Queue=%27www-drift%27",
-        form => {user => 'marcusr', pass => $config->{pass}},
+        form => {user => $config->{rt}->{user}, pass => $config->{rt}->{pass}},
         sub($ua,$tx) {
           my @messages = reverse split /\n/, $tx->res->body;
           for my $message (@messages) {

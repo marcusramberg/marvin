@@ -38,7 +38,7 @@ sub import {
   my $routes = $app->routes->namespaces([]);
   $app->static->classes->[0] = $app->renderer->classes->[0] = $caller;
 
-  push @{$app->plugins->namespaces}, 'Marvin::Plugin';
+  unshift @{$app->plugins->namespaces}, 'Marvin::Plugin';
 
   # The Mojolicious::Lite DSL
   my $root = $routes;
