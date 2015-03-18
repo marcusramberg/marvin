@@ -2,6 +2,7 @@ package Marvin::Adapter::XMPP;
 
 use Marvin::Adapter;
 use Mojo::Base 'Marvin::Adapter';
+
 has 'client';
 
 use AnyEvent;
@@ -10,7 +11,7 @@ use AnyEvent::XMPP::IM::Message;
 use AnyEvent::XMPP::Ext::Disco;
 use AnyEvent::XMPP::Ext::MUC;
 
-sub setup {
+sub register {
   my $self   = shift;
   my $config = $self->config;
   $self->client(
@@ -59,7 +60,37 @@ sub setup {
       print "ERROR: " . $err->string . "\n";
     },
   );
+  $self->on(
+    'notify',
+    sub {
+      my ($e, $jid, $msg) = @_;
+      if (my $room = $self->{rooms}->{$jid}) {
+        $room->make_message(body => $msg)->send;
+      }
+
+    }
+  );
   $self->client->start;
 }
 
 1;
+
+=head1 NAME
+
+Marvin::Adapter::XMPP - XMPP Adapter for Marvin.
+
+=head1 SYNOPSIS
+
+  adapters => [{
+    type  => 'XMPP',
+    user  => 'marcusr@chat.uio.no/marvin',
+    pass  => undef,
+    host  => 'chat.uio.no',
+    nick  => 'marvin',
+    rooms => [ 'w3d-chatops@conference.chat.uio.no' ],
+    tagline => undef,
+  }],
+
+=head1 DESCRIPTION
+
+=head1 METHODS

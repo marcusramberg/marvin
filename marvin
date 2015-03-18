@@ -1,13 +1,10 @@
 #!/usr/bin/env perl
 use lib 'lib';
 use Marvin;
-use experimental 'signatures';
-use IO::Prompt;
 
-my $config=plugin 'Config';
-$config->{adapter_config}->{pass} //= prompt('password: ', -e=>'*'); 
-
+plugin 'Config';
 plugin 'RT';
+plugin 'Console';
 
 app->start;
 
