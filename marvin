@@ -1,97 +1,14 @@
-use Mojolicious::Lite;
-use 5.20.0;
-use experimental "signatures";
-
-use EV;
-use AnyEvent;
-use AnyEvent::XMPP::Client;
-use AnyEvent::XMPP::IM::Message;
-use AnyEvent::XMPP::Ext::Disco;
-use AnyEvent::XMPP::Ext::MUC;
-use Mojo::Server::Daemon;
+#!/usr/bin/env perl
+use lib 'lib';
+use Marvin;
+use experimental 'signatures';
 use IO::Prompt;
 
 my $config=plugin 'Config';
-$config->{pass} //= prompt('password: ', -e=>'*'); 
-$config->{nick} //= 'marvin';
+$config->{adapter_config}->{pass} //= prompt('password: ', -e=>'*'); 
 
-my @rooms=();
-init_rt($config);
-init_jabber($config);
-
-my $daemon= Mojo::Server::Daemon->new( app => app, listen => ['http://*:8080']);
+plugin 'RT';
 
 app->start;
 
-sub init_jabber($config) {
-  my $cl = AnyEvent::XMPP::Client->new (debug => !! ( app->mode eq 'development'));
-  $cl->add_account ($config->{user},$config->{pass},$config->{host});
-  $cl->reg_cb (
-    session_ready => sub {
-      my ($cl, $acc) = @_;
-      $cl->set_presence(undef,$config->{tagline} || "Life? Don't talk to me about life.",10);
-      my $con=$acc->connection;
-      $con->add_extension (my $disco = AnyEvent::XMPP::Ext::Disco->new);
-      $con->add_extension (my $muc = AnyEvent::XMPP::Ext::MUC->new (disco => $disco));
-
-      $muc->join_room($con,$_, $config->{nick}) for(@{ $config->{rooms} });
-      $muc->reg_cb(
-        message => sub {
-          my ($cl, $room, $msg, $is_echo) = @_;
-          return if $is_echo;
-          return if $msg->is_delayed;
-          my $nick=$config->{nick};
-          if( $msg->any_body =~ /^\s*\Q$nick\E:/ ) {
-            my $repl=$msg->make_reply;
-            $repl->add_body("Freeze? I'm a robot. I'm not a refrigerator");
-            $repl->send;
-          }
-        },
-        enter => sub {
-          my ($cl, $room, $me) = @_;
-          warn "Joined ".$room->jid;
-          push @rooms,$room;
-        },
-        leave => sub {
-          my ($cl, $room, $me) = @_;
-          warn "Parted ".$room->jid;
-          @rooms = grep { $room->jid ne $_->jid } @rooms;
-        },
-      );
-    },
-    disconnect => sub {
-      my ($cl, $acc, $h, $p, $reas) = @_;
-      print "disconnect ($h:$p): $reas\n";
-    },
-    error => sub {
-      my ($cl, $acc, $err) = @_;
-      print "ERROR: " . $err->string . "\n";
-    },
-  );
-  $cl->start;
-}
-
-sub init_rt($config) {
-    my $ua=Mojo::UserAgent->new();
-    my $seen=0;
-    Mojo::IOLoop->recurring(20 => sub {
-        $ua->post("https://rt.uio.no/REST/1.0/search/ticket?orderby=-created&format=s&query=Owner=%27Nobody%27 AND (Status=%27new%27 or Status=%27open%27) AND Queue=%27www-drift%27", 
-          form => { user => 'marcusr', pass => $config->{pass} },
-          sub($ua,$tx) {
-            my @messages=reverse split /\n/,$tx->res->body;
-            for my $message (@messages) {
-              utf8::decode($message);
-              last unless $message =~ /^(?<ticket>\d+):(?<subject>.+)$/;
-              last if $seen>=$+{ticket};
-              $seen=$+{ticket};
-            for my $room (@rooms) {
-              $room->make_message(
-                body => "[www-drift] $+{subject} https://rt.uio.no/Ticket/Display.html?id=$+{ticket}"
-              )->send;
-            }
-          }
-        });
-    });
-}
-        
 1;
