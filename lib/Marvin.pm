@@ -11,11 +11,6 @@ use Mojo::UserAgent::Server;
 use Mojo::Util 'monkey_patch';
 
 use EV;
-use AnyEvent;
-use AnyEvent::XMPP::Client;
-use AnyEvent::XMPP::IM::Message;
-use AnyEvent::XMPP::Ext::Disco;
-use AnyEvent::XMPP::Ext::MUC;
 
 use experimental "signatures";
 use Carp qw/croak/;

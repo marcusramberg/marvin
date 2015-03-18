@@ -4,6 +4,12 @@ use Marvin::Adapter;
 use Mojo::Base 'Marvin::Adapter';
 has 'client';
 
+use AnyEvent;
+use AnyEvent::XMPP::Client;
+use AnyEvent::XMPP::IM::Message;
+use AnyEvent::XMPP::Ext::Disco;
+use AnyEvent::XMPP::Ext::MUC;
+
 sub setup {
   my $self   = shift;
   my $config = $self->config;
