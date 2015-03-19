@@ -5,7 +5,11 @@ use Mojo::Loader 'load_class';
 use Carp();
 use IO::Prompt;
 
+use Marvin::Bus;
+
 has adapters => sub { [] };
+has password => sub { prompt('password: ', -e => '*'); };
+has bus      => sub { Marvin::Bus->new() };
 
 sub start {
   my $self     = shift;
@@ -22,11 +26,10 @@ sub start {
     }
     my $adapter = $class->new(config => $adapter);
 
-    $adapter->register;
+    $adapter->register($self);
     push @{$self->adapters}, $adapter;
   }
   $self->SUPER::start(@_);
 }
 
-has password => sub { prompt('password: ', -e => '*'); };
 1;

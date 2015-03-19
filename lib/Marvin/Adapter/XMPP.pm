@@ -12,7 +12,7 @@ use AnyEvent::XMPP::Ext::Disco;
 use AnyEvent::XMPP::Ext::MUC;
 
 sub register {
-  my $self   = shift;
+  my ($self, $app) = @_;
   my $config = $self->config;
   $self->client(
     AnyEvent::XMPP::Client->new(debug => $self->config->{debug} // 0));
@@ -21,46 +21,22 @@ sub register {
   $self->client->reg_cb(
     session_ready => sub {
       my ($cl, $acc) = @_;
+      $app->bus->emit(connected => $acc);
       $cl->set_presence(undef,
         $config->{tagline} || "Life ? Don't talk to me about life .", 10);
       my $con = $acc->connection;
-      $con->add_extension(my $disco = AnyEvent::XMPP::Ext::Disco->new);
-      $con->add_extension(my $muc
-          = AnyEvent::XMPP::Ext::MUC->new(disco => $disco));
-
-      $muc->join_room($con, $_, $config->{nick}) for (@{$config->{rooms}});
-      $muc->reg_cb(
-        message => sub {
-          my ($cl, $room, $msg, $is_echo) = @_;
-          return if $is_echo;
-          return if $msg->is_delayed;
-          my $nick = $config->{nick};
-          if ($msg->any_body =~ /^\s*\Q$nick\E:/) {
-            $self->emit(message => $msg->any_body, $room->jid);
-          }
-        },
-        enter => sub {
-          my ($cl, $room, $me) = @_;
-          $self->emit(joined => $room->jid, $me);
-          $self->{rooms}->{$room->jid} = $room;
-        },
-        leave => sub {
-          my ($cl, $room, $me) = @_;
-          $self->emit(parted => $room->jid, $me);
-          delete $self->{rooms}->{$room->jid};
-        },
-      );
+      $self->_setup_muc($config, $app, $con);
     },
     disconnect => sub {
       my ($cl, $acc, $h, $p, $reas) = @_;
-      $self->emit(disconnected => $h, $p);
+      $app->bus->emit(disconnected => $h, $p);
     },
     error => sub {
       my ($cl, $acc, $err) = @_;
       print "ERROR: " . $err->string . "\n";
     },
   );
-  $self->on(
+  $app->bus->on(
     'notify',
     sub {
       my ($e, $jid, $msg) = @_;
@@ -71,6 +47,36 @@ sub register {
     }
   );
   $self->client->start;
+}
+
+sub _setup_muc {
+  my ($self, $config, $app, $con) = @_;
+  $con->add_extension(my $disco = AnyEvent::XMPP::Ext::Disco->new);
+  $con->add_extension(my $muc
+      = AnyEvent::XMPP::Ext::MUC->new(disco => $disco));
+
+  $muc->join_room($con, $_, $config->{nick}) for (@{$config->{rooms}});
+  $muc->reg_cb(
+    message => sub {
+      my ($cl, $room, $msg, $is_echo) = @_;
+      return if $is_echo;
+      return if $msg->is_delayed;
+      my $nick = $config->{nick};
+      if ($msg->any_body =~ /^\s*\Q$nick\E:/) {
+        $app->bus->emit(message => $msg->any_body, $room->jid);
+      }
+    },
+    enter => sub {
+      my ($cl, $room, $me) = @_;
+      $app->bus->emit(joined => $room->jid, $me);
+      $self->{rooms}->{$room->jid} = $room;
+    },
+    leave => sub {
+      my ($cl, $room, $me) = @_;
+      $app->bus->emit(parted => $room->jid, $me);
+      delete $self->{rooms}->{$room->jid};
+    },
+  );
 }
 
 1;
