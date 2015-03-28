@@ -5,6 +5,7 @@ use Marvin;
 plugin 'Config';
 plugin 'RT';
 plugin 'Console';
+plugin 'Stash';
 
 app->start;
 

@@ -1,7 +1,7 @@
 package Marvin::Adapter::XMPP;
 
-use Marvin::Adapter;
 use Mojo::Base 'Marvin::Adapter';
+use experimental 'signatures';
 
 has 'client';
 
@@ -11,8 +11,7 @@ use AnyEvent::XMPP::IM::Message;
 use AnyEvent::XMPP::Ext::Disco;
 use AnyEvent::XMPP::Ext::MUC;
 
-sub register {
-  my ($self, $app) = @_;
+sub register($self, $app) {
   my $config = $self->config;
   $self->client(
     AnyEvent::XMPP::Client->new(debug => $self->config->{debug} // 0));
@@ -62,9 +61,13 @@ sub _setup_muc {
       return if $is_echo;
       return if $msg->is_delayed;
       my $nick = $config->{nick};
-      if ($msg->any_body =~ /^\s*\Q$nick\E:/) {
-        $app->bus->emit(message => $msg->any_body, $room->jid);
+      if ($msg->any_body =~ /^\s*\Q$nick\E:\s*(.+)$/) {
+        $app->bus->emit(message => $room->jid, $msg->from, $1);
       }
+      else {
+        $app->bus->emit(public => $room->jid, $msg->from, $msg->any_body);
+      }
+
     },
     enter => sub {
       my ($cl, $room, $me) = @_;

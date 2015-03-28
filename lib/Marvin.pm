@@ -45,6 +45,7 @@ sub import {
   for my $name (qw(any get options patch post put websocket)) {
     monkey_patch $caller, $name, sub { $routes->$name(@_) };
   }
+  monkey_patch $caller, chat => sub { $app->chat(@_) };
   monkey_patch $caller, $_, sub {$app}
     for qw(new app);
   monkey_patch $caller, del => sub { $routes->delete(@_) };
@@ -62,4 +63,22 @@ sub import {
 
 }
 
+
 1;
+
+=head1 NAME
+
+Marvin - A bot framework built on Mojolicious
+
+=head1 SYNOPSIS
+
+  use Marvin;
+
+  plugin 'Config';
+  chat 'ping :host' => sub {
+    my ($self, $a)= @_;
+    $self->bus->notify();
+  };
+  app->start;
+
+=cut
