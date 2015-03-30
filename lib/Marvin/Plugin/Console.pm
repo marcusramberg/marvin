@@ -7,8 +7,12 @@ sub register {
   $app->log->debug('Registered Console');
   $app->bus->on(
     message => sub {
-      my ($e, $channel, $message) = @_;
-      $app->log->debug("<< [$channel] $message");
+      my ($e, $msg, $channel, $nick) = @_;
+      $app->log->debug("<< [$channel] <$nick> $msg");
+    },
+    public => sub {
+      my ($e, $msg, $channel, $nick) = @_;
+      $app->log->debug("<< [$channel] <$nick> $msg");
     },
     notify => sub {
       my ($e, $channel, $message) = @_;

@@ -20,9 +20,13 @@ $app->config->{adapters} = [];
     }
   );
 
-  $app->bus->emit(public => 'test', 'user', 'oh hai');
+  $app->bus->emit(public => 'oh hai', 'test', 'user', 'user@test.org');
   $app->start;
-  is_deeply($message, ['test', 'user', {}, 'oh hai'], 'Correct msg args');
+  is_deeply(
+    $message,
+    ['oh hai', 'test', 'user', 'user@test.org', {}],
+    'Correct msg args'
+  );
 
 };
 
@@ -37,9 +41,13 @@ $app->config->{adapters} = [];
     }
   );
 
-  $app->bus->emit(message => 'test', 'user', 'oh hai');
+  $app->bus->emit(message => 'oh hai', 'test', 'user', 'test@test.org');
   $app->start;
-  is_deeply($message, ['test', 'user', {}, 'oh hai'], 'Correct msg args');
+  is_deeply(
+    $message,
+    ['oh hai', 'test', 'user', 'test@test.org', {}],
+    'Correct msg args'
+  );
 
 }
 

@@ -45,15 +45,16 @@ sub import {
   for my $name (qw(any get options patch post put websocket)) {
     monkey_patch $caller, $name, sub { $routes->$name(@_) };
   }
-  monkey_patch $caller, chat => sub { $app->chat(@_) };
   monkey_patch $caller, $_, sub {$app}
     for qw(new app);
   monkey_patch $caller, del => sub { $routes->delete(@_) };
   monkey_patch $caller,
-    helper => sub { $app->helper(@_) },
-    hook   => sub { $app->hook(@_) },
-    plugin => sub { $app->plugin(@_) },
-    under  => sub { $routes = $root->under(@_) };
+    helper  => sub { $app->helper(@_) },
+    hook    => sub { $app->hook(@_) },
+    plugin  => sub { $app->plugin(@_) },
+    message => sub { $app->message(@_) },
+    public  => sub { $app->public(@_) },
+    under   => sub { $routes = $root->under(@_) };
 
   # Make sure there's a default application for testing
   Mojo::UserAgent::Server->app($app) unless Mojo::UserAgent::Server->app;
@@ -75,9 +76,10 @@ Marvin - A bot framework built on Mojolicious
   use Marvin;
 
   plugin 'Config';
-  chat 'ping :host' => sub {
-    my ($self, $a)= @_;
-    $self->bus->notify();
+  message 'ping :host' => sub {
+    my ($self, $channel, $user, $match, $msg)= @_;
+    my $res=_ping($match->{host});
+    $self->notify();
   };
   app->start;
 

@@ -10,7 +10,8 @@ has 'config';
 sub register($self,$app,$config) {
   $self->config($app->config);
   $self->{seen} = 0;
-  $app->post('/web-hook' => \&web_hook);
+
+  # $app->app->post('/web-hook' => \&web_hook);
 }
 
 sub web_hook($self) {
