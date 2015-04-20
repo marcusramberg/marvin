@@ -11,7 +11,7 @@ sub register($self,$app,$config) {
   $self->config($app->config);
   $self->{seen} = 0;
 
-  # $app->app->post('/web-hook' => \&web_hook);
+  $app->routes->post('/web-hook' => \&web_hook);
 }
 
 sub web_hook($self) {

@@ -7,6 +7,23 @@ use experimental 'signatures';
 has 'ua' => sub { Mojo::UserAgent->new };
 has 'config';
 
+has answers => sub {
+  [
+    "Ok, but I don't think you'll like it",
+    "Good luck with that",
+    "I bet you can't take another",
+    "*sigh* OK",
+    "A brain the size of a planet, and you ask me to assign you a trouble ticket. Here you go...",
+    "I've been talking to the RT Server. It hates me",
+    "Not that anyone care what I say, but that ticket now belongs to you",
+    "Done. Now I've got a headache",
+    "Ok. I think you ought to know I'm feeling very depressed",
+    "Do you want me to sit in a corner and rust or just fall apart where I'm standing?",
+    "Oh, not another one.",
+    "I'd like you to know I didn't enjoy that at all"
+  ];
+};
+
 sub register($self,$app,$config) {
   $self->config($app->config);
   $self->{seen} = 0;
@@ -97,7 +114,6 @@ sub setup_take($self,$app) {
               "$delay->{ticket} already taken by $ticket->{Owner} "
             );
           }
-          warn "Taking";
           $self->ua->post(
             $self->rt_url_for("ticket/$delay->{ticket}/edit"),
             form => {
@@ -113,7 +129,7 @@ sub setup_take($self,$app) {
           if ($tx->success) {
             return $app->bus->emit(
               notify => $delay->{channel},
-              "Sigh . Here I am, brain the size of a planet, and you ask me to assign you a ticket. fine."
+              $self->answers->[rand @{$self->answers}]
             );
           }
           return $app->bus->emit(
