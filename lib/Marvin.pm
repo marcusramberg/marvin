@@ -12,7 +12,7 @@ use Mojo::Util 'monkey_patch';
 
 use EV;
 
-use experimental "signatures";
+use experimental 'signatures';
 use Carp qw/croak/;
 
 sub import {
@@ -75,10 +75,21 @@ Marvin - A bot framework built on Mojolicious
   use Marvin;
 
   plugin 'Config';
+
   chat 'ping :host' => sub {
-    my ($self, $a)= @_;
-    $self->bus->notify();
+    my ($self, $msg,$channel,$nick,$host,$args)= @_;
+    my $res=_ping($args->{host});
+    $self->bus->emit(notify=>$channel,$res);
+  };
+  get '/hello' => sub {
+    $self->bus->emit(notify=>app->config->{hello_channel},'Hello world');
   };
   app->start;
+
+=head1 DESCRIPTION
+
+Marvin is a framework for writing chat bots. It's slanted towards devops
+settings, but you could use it for any sort of chat channel. Just write 
+plugins and endpoints 
 
 =cut
