@@ -76,7 +76,6 @@ Marvin - A bot framework built on Mojolicious
   use Marvin;
 
   plugin 'Config';
-<<<<<<< HEAD
 
   chat 'ping :host' => sub {
     my ($self, $msg,$channel,$nick,$host,$args)= @_;
@@ -101,6 +100,6 @@ plugins and endpoints
 
 =head1 COPYRIGHT
 
-=head1 LICENSE
+    =head1 LICENSE
 
 =cut
