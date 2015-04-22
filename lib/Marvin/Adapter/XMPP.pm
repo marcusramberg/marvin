@@ -61,11 +61,18 @@ sub _setup_muc {
       return if $is_echo;
       return if $msg->is_delayed;
       my $nick = $config->{nick};
+      my $from = $room->get_user($msg->from_nick);
       if ($msg->any_body =~ /^\s*\Q$nick\E:\s*(.+)$/) {
-        $app->bus->emit(message => $room->jid, $msg->from, $1);
+        $app->bus->emit(
+          message => $1,
+          $room->jid, $msg->from_nick, $from && $from->real_jid
+        );
       }
       else {
-        $app->bus->emit(public => $room->jid, $msg->from, $msg->any_body);
+        $app->bus->emit(
+          public => $msg->any_body,
+          $room->jid, $msg->from_nick, $from && $from->real_jid
+        );
       }
 
     },

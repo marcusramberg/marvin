@@ -16,7 +16,7 @@ sub notify { shift->bus->notify(@_); }
 sub start {
   my $self     = shift;
   my $config   = $self->config;
-  my $adapters = $config->{adapters};
+  my $adapters = $config->{adapters} || $self->adapters;
   Carp::croak 'adapters must be a list of hashes'
     unless $adapters && ref $adapters eq 'ARRAY';
   for my $adapter (@$adapters) {
@@ -38,9 +38,9 @@ sub public {
   $self->bus->on(
     'public',
     sub {
-      my ($e, $channel, $user, $msg) = @_;
+      my ($e, $msg, $channel, $nick, $user) = @_;
       if (my $match = $r->match("/$msg")) {
-        $cb->($self, $channel, $user, $match, $msg);
+        $cb->($self, $msg, $channel, $nick, $user, $match);
       }
     }
   );
@@ -52,9 +52,9 @@ sub message {
   $self->bus->on(
     'message',
     sub {
-      my ($e, $channel, $user, $msg) = @_;
+      my ($e, $msg, $channel, $nick, $user) = @_;
       if (my $match = $r->match("/$msg")) {
-        $cb->($self, $channel, $user, $match, $msg);
+        $cb->($self, $msg, $channel, $nick, $user, $match);
       }
     }
   );

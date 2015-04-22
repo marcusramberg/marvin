@@ -7,6 +7,23 @@ use experimental 'signatures';
 has 'ua' => sub { Mojo::UserAgent->new };
 has 'config';
 
+has answers => sub {
+  [
+    "Ok, but I don't think you'll like it",
+    "Good luck with that",
+    "I bet you can't take another",
+    "*sigh* OK",
+    "A brain the size of a planet, and you ask me to assign you a trouble ticket. Here you go...",
+    "I've been talking to the RT Server. It hates me",
+    "Not that anyone care what I say, but that ticket now belongs to you",
+    "Done. Now I've got a headache",
+    "Ok. I think you ought to know I'm feeling very depressed",
+    "Do you want me to sit in a corner and rust or just fall apart where I'm standing?",
+    "Oh, not another one.",
+    "I'd like you to know I didn't enjoy that at all"
+  ];
+};
+
 sub register($self,$app,$config) {
   $self->config($app->config);
   $self->{seen} = 0;
@@ -54,60 +71,72 @@ sub setup_poll($self,$app) {
 }
 
 sub setup_take($self,$app) {
-  Mojo::IOLoop->delay(
+  my $delay = shift;
+  $app->public(
+    '!take :ticket',
     sub {
-      my $delay = shift;
-      $app->public('!take :ticket', $delay->begin);
-    },
-    sub {
-      my ($delay, $channel, $user, $match, $msg) = @_;
-      $delay->{channel} = $channel;
-      $delay->{ticket}  = $match->{ticket};
-      ($delay->{user}) = $user =~ m/^([^@]+)/;
+      my ($e, $msg, $channel, $user, $nick, $match) = @_;
+      Mojo::IOLoop->delay(
+        sub {
+          my $delay = shift;
+          $delay->{channel} = $channel;
+          $delay->{ticket}  = $match->{ticket};
+          ($delay->{user}) = $user =~ m/^([^@]+)/;
 
-      my $ticket
-        = $self->ua->get($self->rt_url_for("ticket/$delay->{ticket}/show"),
-        $delay->begin);
-    },
-    sub {
-      my ($delay, $tx) = @_;
-      unless ($tx->success) {
-        return $app->bus->emit(
-          notify => $delay->{channel},
-          'Dave is not here right now.'
-        );
-      }
-      my $ticket = parse_rt($tx->res->body);
-      unless ($ticket->{Id}) {
-        return $app->bus->emit(
-          notify => $delay->{channel},
-          'Could not find that ticket'
-        );
-      }
+          my $ticket = $self->ua->post(
+            $self->rt_url_for("ticket/$delay->{ticket}/show"),
+            form => {
+              user => $self->config->{rt}->{user},
+              pass => $self->config->{rt}->{pass}
+            },
+            $delay->begin
+          );
+        },
+        sub {
+          my ($delay, $tx) = @_;
+          unless ($tx->success) {
+            return $app->bus->emit(
+              notify => $delay->{channel},
+              'Dave is not here right now.'
+            );
+          }
+          my $ticket = parse_rt($tx->res->body);
+          unless ($ticket->{id}) {
+            return $app->bus->emit(
+              notify => $delay->{channel},
+              'Could not find that ticket'
+            );
+          }
 
-      if ($ticket->{Owner}) {
-        return $app->bus->emit(
-          notify => $delay->{channel},
-          "$delay->{ticket} already taken by $ticket->{Owner}"
-        );
-      }
-      $self->ua->post(
-        $self->rt_url_for("ticket/$delay->{ticket}/edit"),
-        form => {content => "Owner:$delay->{user}"},
-        $delay->begin
-      );
-    },
-    sub {
-      my ($delay, $tx) = @_;
-      if ($tx->success) {
-        return $app->bus->emit(
-          notify => $delay->{channel},
-          "Sigh. Here I am, brain the size of a planet, and you ask me to assign you a ticket. fine."
-        );
-      }
-      return $app->bus->emit(
-        notify => $delay->{channel},
-        "This will all end in tears."
+          if ($ticket->{Owner} && $ticket->{Owner} ne 'Nobody') {
+            return $app->bus->emit(
+              notify => $delay->{channel},
+              "$delay->{ticket} already taken by $ticket->{Owner} "
+            );
+          }
+          $self->ua->post(
+            $self->rt_url_for("ticket/$delay->{ticket}/edit"),
+            form => {
+              user    => $self->config->{rt}->{user},
+              pass    => $self->config->{rt}->{pass},
+              content => "Owner: $delay->{user}"
+            },
+            $delay->begin
+          );
+        },
+        sub {
+          my ($delay, $tx) = @_;
+          if ($tx->success) {
+            return $app->bus->emit(
+              notify => $delay->{channel},
+              $self->answers->[rand @{$self->answers}]
+            );
+          }
+          return $app->bus->emit(
+            notify => $delay->{channel},
+            "This will all end in tears ."
+          );
+        }
       );
     }
   );
@@ -120,8 +149,9 @@ sub rt_url_for($self, $path) {
 sub parse_rt($body) {
   my $ticket = {};
   for my $line (split /\n/, $body) {
-    if ($line =~ m/^(.+)\*s\:\s*(.+)$/) {
-      $ticket->{$1} = $2;
+    my ($key, $value) = split ': ', $line;
+    if (defined $value) {
+      $ticket->{$key} = $value;
     }
   }
   return $ticket;
