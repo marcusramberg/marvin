@@ -40,8 +40,9 @@ sub public {
     'public',
     sub {
       my ($e, $msg, $channel, $nick, $user) = @_;
-      $msg =~ s/\s+/\//g;
-      if (my $match = $r->match("/$msg")) {
+      my $as_route = " $msg";
+      $as_route =~ s/\s+/\//g;
+      if (my $match = $r->match($as_route)) {
         $cb->($self, $msg, $channel, $nick, $user, $match);
       }
     }
