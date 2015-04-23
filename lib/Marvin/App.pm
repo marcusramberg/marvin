@@ -34,11 +34,13 @@ sub start {
 
 sub public {
   my ($self, $route, $cb) = @_;
+  $route =~ s/\s+/\//g;
   my $r = Mojolicious::Routes::Pattern->new($route);
   $self->bus->on(
     'public',
     sub {
       my ($e, $msg, $channel, $nick, $user) = @_;
+      $msg =~ s/\s+/\//g;
       if (my $match = $r->match("/$msg")) {
         $cb->($self, $msg, $channel, $nick, $user, $match);
       }

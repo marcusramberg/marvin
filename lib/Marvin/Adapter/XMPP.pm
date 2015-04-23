@@ -13,8 +13,7 @@ use AnyEvent::XMPP::Ext::MUC;
 
 sub register($self, $app) {
   my $config = $self->config;
-  $self->client(
-    AnyEvent::XMPP::Client->new(debug => $self->config->{debug} // 0));
+  $self->client(AnyEvent::XMPP::Client->new(debug => $config->{debug} // 0));
   $self->client->add_account($config->{user}, $config->{pass},
     $config->{host});
   $self->client->reg_cb(

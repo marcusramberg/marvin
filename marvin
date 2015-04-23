@@ -3,9 +3,11 @@ use lib 'lib';
 use Marvin;
 
 plugin 'Config';
-plugin 'RT';
 plugin 'Console';
+plugin 'Cleverbot';
+plugin 'RT';
 plugin 'Stash';
+plugin 'Zabbix';
 
 app->start;
 

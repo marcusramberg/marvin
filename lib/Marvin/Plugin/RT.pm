@@ -24,14 +24,14 @@ has answers => sub {
   ];
 };
 
-sub register($self,$app,$config) {
+sub register($self, $app, $config) {
   $self->config($app->config);
   $self->{seen} = 0;
   $self->setup_take($app);
   $self->setup_poll($app);
 }
 
-sub setup_poll($self,$app) {
+sub setup_poll($self, $app) {
 
   Mojo::IOLoop->recurring(
     20 => sub {
