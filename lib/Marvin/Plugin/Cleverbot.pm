@@ -3,6 +3,7 @@ package Marvin::Plugin::Cleverbot;
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::UserAgent;
 use experimental 'signatures';
+use DDP;
 
 has 'ua' => sub { Mojo::UserAgent->new };
 
@@ -12,7 +13,7 @@ sub register($self, $app, $config) {
     sub {
       my ($e, $msg, $channel, $user, $nick, $match) = @_;
       $self->ua->post(
-        'http://cleverbot.io/1.0/ask',
+        'https://cleverbot.io/1.0/ask',
         form => {
           user => $app->config->{cleverbot}->{user},
           key  => $app->config->{cleverbot}->{key},
@@ -23,6 +24,7 @@ sub register($self, $app, $config) {
           my ($ua, $tx) = @_;
           if (my $res = $tx->success) {
             my $body = $res->json;
+            p $body;
             $app->bus->emit(
               notify => $channel,
               "$nick: "
