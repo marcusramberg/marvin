@@ -3,6 +3,8 @@ package Marvin;
 # Marvin uses sub signatures and requires 5.20.0;
 use 5.20.0;
 
+our $VERSION = '0.1';
+
 use Mojo::Base 'Marvin::App';
 
 use File::Basename qw(basename dirname);
