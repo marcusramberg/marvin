@@ -11,7 +11,7 @@ sub register($self, $app) {
   my $config = $self->config;
   $self->client(
     Mojo::IRC->new(
-      nick   => $config - {nick},
+      nick   => $config->{nick},
       user   => $config->{user},
       server => $config->{server}
     )
@@ -32,7 +32,7 @@ sub register($self, $app) {
 
   $self->client->on(
     privmsg => sub($self,$msg) {
-      my $from = $message->{params}[0];
+      my $from = $msg->{params}[0];
       $app->bus->emit(message => $from, $msg->from, $1);
     }
   );
