@@ -3,7 +3,6 @@ package Marvin::Plugin::Cleverbot;
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::UserAgent;
 use experimental 'signatures';
-use DDP;
 
 has 'ua' => sub { Mojo::UserAgent->new };
 
