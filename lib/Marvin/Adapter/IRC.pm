@@ -13,7 +13,7 @@ sub register($self, $app) {
     Mojo::IRC->new(
       nick   => $config->{nick},
       user   => $config->{user},
-      server => $config->{server}
+      server => $config->{host}
     )
   );
   $self->client->connect(
