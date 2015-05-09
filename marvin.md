@@ -145,10 +145,10 @@ use experimental 'signatures';
 
 sub register($self, $app, $config) {
   $app->routes->post('/web-hook' => \&web_hook);
-
 } 
 
 sub web_hook($self) { ... }
+
 ```
 
 
@@ -170,7 +170,7 @@ PLS HELP MAKE THE AI SAD
 
 ```
 $ cpanm Marvin
-````
+```
 
 github.com/marcusramberg/marvin
 
@@ -205,6 +205,12 @@ vi marvin.development.conf
       tagline => 'Oh god I am so depressed.',
     },
   ],
+```
+
+
+```
+ ./marvin.pl daemon --listen http://127.0.0.1:5000
+ Server available at http://127.0.0.1:5000
 ```
 
 
