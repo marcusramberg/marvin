@@ -5,4 +5,4 @@ ADD . /source
 RUN PERL_MM_USE_DEFAULT=1 cpan App::cpanminus
 WORKDIR /source
 RUN perl Makefile.PL -y
-RUN cpanm --installdeps .
+RUN cpanm --no-wget --installdeps .
