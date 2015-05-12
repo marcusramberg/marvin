@@ -7,8 +7,8 @@
 title: MARVIN
 indent: 5
 auto_size: 1
-vim_opts: '-u NONE'
 skip: 0
+# vim_opts: '-u NONE'
 
 
 ---- center
@@ -37,10 +37,19 @@ MARVIN
 
 ----
 == Nordaaker
+* Mobile and Web consulting
+* Developed iusethis.com, ranked.no, output.digital
 ----
 == Slack
+* Web based hosted chat solution
+* Has IRC gateway
+* Lots of Web Hooks/Extensions
 ----
 == Jabber
+* XMPP
+* confernce server 
+* Persistent messaging
+
 ----
 == Why?
 
@@ -81,13 +90,14 @@ Mojolicious::Lite
 == Hitchhiker's Guide To The Galaxy by Douglas Adams
 ----
 == Request Tracker
----- 
+----  html
 == !take
-<marvin> [www-drift]  supply transformer https://rt.uio.no/Ticket/Display.html?id=1806536
+<marvin> [www-drift]  supply transformer
+         https://rt.uio.no/Ticket/Display.html?id=1806536
 <luser> !take 1806536
 <marvin> Ok, but I don't think you'll like it
 ---- 
-== “Sorry, did I say something wrong?" said Marvin,
+   “Sorry, did I say something wrong?" said Marvin,
     dragging himself on regardless. "Pardon me for 
     breathing, which I never do anyway so I don't 
     know why I bother to say it, oh God I'm so
@@ -95,22 +105,27 @@ Mojolicious::Lite
     doors. Life! Don't talk to me about life.” 
 ---- 
 == Zabbix
+
+* Simple JSON REST API
+
 ---- 
-== !downtime hostname 5 minutes disk swap
+== !downtime zaphod 5 minutes disk swap
 ----
 == REST + Mojolicious::UserAgent == <3
 ----
 == SOAP
 
-* SOAD?
+== SOAD?
+
+== EYE BLEACH?
 ----
 == LDAP
 ----
-== authentication
+== Authentication
 ----
 == Atlassian Stash
 ----
-# Web Hooks
+== Web Hooks
 ----
 == Rundeck Plugin
 * Ansible
@@ -179,5 +194,7 @@ $ vi marvin.development.conf
  Server available at http://127.0.0.1:5000
 ----
 == FINALLY
+* Take a look at a running app
+* RT Plugin
 ----
 == QUESTIONS
