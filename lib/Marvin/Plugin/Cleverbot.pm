@@ -24,7 +24,6 @@ sub register($self, $app, $config) {
           my ($ua, $tx) = @_;
           if (my $res = $tx->success) {
             my $body = $res->json;
-            p $body;
             $app->bus->emit(
               notify => $channel,
               "$nick: "

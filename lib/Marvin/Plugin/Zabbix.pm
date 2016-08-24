@@ -2,6 +2,7 @@ package Marvin::Plugin::Zabbix;
 
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::UserAgent;
+use Mojo::Util qw/dumper/;
 use experimental 'signatures';
 use DateTime::Format::Natural;
 use Net::DNS::Resolver;
@@ -59,8 +60,7 @@ sub register($self, $app, $config) {
       }
 
       my $start = time();
-      my ($_, $end)
-        = $self->dt->parse_datetime_duration(
+      my @dt    = $self->dt->parse_datetime_duration(
         "for $match->{tquanta} $match->{tscale}");
       if (!$self->dt->success) {
         return $app->bus->emit(
@@ -69,32 +69,58 @@ sub register($self, $app, $config) {
             . $self->dt->error
         );
       }
-      $end = $end->epoch;
+      my $end      = $dt[1]->epoch;
       my $duration = $end - $start;
 
-      $self->ua->post(
-        $app->config->{zabbix}->{url},
-        json => {
-          jsonrpc => "2.0",
-          method  => "maintenance.create",
-          params  => {
-            groupids         => [],
-            hostids          => [$match->{host}],
-            name             => "Maintenance for $match->{host}",
-            maintenance_type => 0,
-            description      => $match->{reason} || "downtime from chat",
-            active_since     => $start,
-            active_till      => $end,
-            timeperiods      => [
-              {
-                timeperiod_type => 0,
-                start_date      => $start,
-                period          => $duration
-              }
-            ],
-          },
-          auth => $self->auth,
-          id   => 3
+      Mojo::IOLoop->delay(
+        sub {
+          my $delay = shift;
+          $self->ua->post(
+            $app->config->{zabbix}->{url},
+            json => {
+              jsonrpc => "2.0",
+              method  => "host.get",
+              params  => {filter => {host => $match->{host}}},
+              auth    => $self->auth,
+              id      => 3
+            },
+            $delay->begin
+          );
+        },
+        sub {
+          my ($delay, $res) = @_;
+          my $json = $res->success->json;
+          warn dumper($json);
+          $app->bus->emit(
+            notify => $channel,
+            "$nick : Could not find that host"
+          ) unless $json->{result}->[0];
+          $self->ua->post(
+            $app->config->{zabbix}->{url},
+            json => {
+              jsonrpc => "2.0",
+              method  => "maintenance.create",
+              params  => {
+                groupids         => [],
+                hostids          => [$json->{result}->[0]->{hostid}],
+                name             => "Maintenance for $match->{host}",
+                maintenance_type => 0,
+                description      => $match->{reason} || "downtime from chat",
+                active_since     => $start,
+                active_till      => $end,
+                timeperiods      => [
+                  {
+                    timeperiod_type => 0,
+                    start_date      => $start,
+                    period          => $duration
+                  }
+                ],
+              },
+              auth => $self->auth,
+              id   => 3,
+            },
+            $delay->begin
+          );
         },
         sub {
           my ($ua, $tx) = @_;
